@@ -1,0 +1,221 @@
+<html>
+<head>
+  <script src="processing.js"></script>
+  <script src="jquery-1.7.min.js"></script>
+  <style>
+	body
+	{
+		background-color: rgb(144, 221, 212);
+	}
+	.header
+	{
+		background-image: url("Background.png");
+		background-repeat: no-repeat;
+		height: 500px;
+		width:100%;
+		margin:auto;
+	}
+	#canvas1
+	{
+		position: absolute;
+		top: 250;
+		margin:auto;
+	}
+	.center
+	{
+		margin:auto;
+		width:800;
+		height:600;
+	}
+  </style>
+</head>
+<body>
+
+<div class="header">
+	
+	<input type="text" />
+	<input type="text" />
+	<button id="button1">Search</button>
+</div>
+<div class="center">
+	<canvas id="canvas1" width="1200" height="800"></canvas>
+</div>
+<script id="script1" type="text/javascript">
+
+$("#button1").click(function(){
+
+	//$.ajax()
+});
+
+
+// Simple way to attach js code to the canvas is by using a function
+function sketchProc(processing) {
+	
+	 function Node(x, y, s, others, id, name, image) {
+		this.x = x; 
+		this.y = y;
+		this.size = s;
+		this.scale = 0.1;
+		this.finalSize = s;
+		this.friends = others;
+		this.id = id;
+		this.name = name;
+		this.picture = processing.loadImage(image);
+
+		this.display = function(){
+			
+			var clock = processing.frameCount/10;
+			
+			if(this.scale < 1.0) {
+				this.scale = this.scale+0.01;
+			}
+			processing.pushMatrix();
+			processing.scale(this.scale)
+			
+			// image
+			processing.ellipse(this.x, this.y, this.size, this.size);
+			processing.image(this.picture, this.x-this.size/2, this.y-this.size/2);
+
+
+			//textBox
+			processing.fill(255);
+			var textBoxWidth = 120, textBoxHeight = 30, textBoxRadius = 10;
+			var textBoxX = this.x - textBoxWidth/2, 
+			    textBoxY = this.y + this.size/2;
+			processing.rect(textBoxX, textBoxY , textBoxWidth, textBoxHeight, textBoxRadius);
+
+			//text
+
+			var paddingX = 4, paddingY = 6;
+			
+			
+			processing.fill(backgroundColor.r-60, backgroundColor.g-60, backgroundColor.b-60);
+			processing.text(this.name, textBoxX + paddingX, textBoxY + paddingY, 100, 30);
+			
+
+
+			processing.popMatrix();
+		};
+		
+		
+	};
+	
+	function Edge(node1, node2){
+		this.xi = node1.x;
+		this.yi = node1.y;
+		this.xf = node2.x;
+		this.yf = node2.y;
+		
+		this.display = function() {
+			processing.stroke(255);
+			processing.line(this.xi, this.yi, this.xf, this.yf);  
+			
+			
+		}
+		
+	}
+	
+	function processNodes(data, size){
+		var nodes = [];
+		for (var i = 0; i < data.length; i++)
+		{
+			var x = (i+1) * (totalWidth / (data.length +1));
+			var y = totalHeight/2 //+ 20 * Math.abs(i-data.length/2)
+			
+			nodes.push(new Node(x, y, size, 0, i, data[i]["name"], data[i].image));
+		}
+		return nodes;
+	}
+	
+	// function processSecondaryNodes(parent){
+	// 	var nodes = [];
+	// 	for (var i = 0; i < data.length; i++)
+	// 	{
+	// 		var x = (i+1) * (totalWidth / (data.length +1));
+	// 		var y = totalHeight/2 //+ 20 * Math.abs(i-data.length/2)
+	// 		
+	// 		nodes.push(new Node(x, y, size, 0, i, data[i]["name"], data[i].image));
+	// 	}
+	// 	return nodes;
+	// }
+	// 
+	function processEdges(nodes)
+	{
+		var edges = [];
+		for (var i = 1; i < nodes.length; i++)
+		{	
+			edges.push(new Edge(nodes[i], nodes[i-1]));
+		}
+		return edges;
+	}
+	
+	
+	
+	//
+	// DISPLAY
+	//
+	//var mask, img1;
+	var sampleData = [
+						{"name":"1234567890123456789", "image": "chucknorris.jpg","children": []},
+						{"name":"Norris", "image": "chucknorris.jpg"},
+						{"name":"One", "image": "chucknorris.jpg"},
+						{"name":"Nor", "image": "chucknorris.jpg"},
+						{"name":"Two", "image": "chucknorris.jpg"}
+					];
+
+	var backgroundColor = {"r":147, "g":221, "b":212};
+	var totalWidth = 1200;
+	var totalHeight = 800;
+	var cuscoNodes = processNodes(sampleData, 80);
+	var cuscoEdges = processEdges(cuscoNodes);
+	var defaultUserPicture;
+	
+	//SETUP
+	processing.setup = function() {
+		//img1 = processing.loadImage("data/test.jpg");
+		//mask = processing.loadImage("data/mask.jpg");
+		//img1.mask(mask);
+		
+		defaultUserPicture = processing.loadImage("Avatar_default.png");
+		
+		processing.size(totalWidth, totalHeight);
+		// erase background
+	    processing.background(backgroundColor.r, backgroundColor.g, backgroundColor.b, 0);
+	
+		processing.textFont(processing.createFont("Lucida Grande", 18));
+		processing.textAlign(processing.CENTER);
+	};
+	
+  // Override draw function, by default it will be called 60 times per second
+  processing.draw = function() {
+	processing.background(backgroundColor.r, backgroundColor.g, backgroundColor.b, 0);
+	
+	//processing.image(img1, 50, 50);
+	for (var i = 0; i < cuscoEdges.length; i++)
+	{
+		cuscoEdges[i].display();
+	}
+	
+	for (var i = 0; i < cuscoNodes.length; i++)
+	{
+		cuscoNodes[i].display();
+	}
+    processing.image(defaultUserPicture, 0, 0);
+	
+  };
+
+  
+}
+
+
+
+var canvas = document.getElementById("canvas1");
+// attaching the sketchProc function to the canvas
+var p = new Processing(canvas, sketchProc);
+// p.exit(); to detach it
+</script>
+
+<div style="height:0px;width:0px;overflow:hidden;"></div>
+</body>
+</html>
+
